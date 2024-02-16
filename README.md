@@ -19,16 +19,16 @@ SensorManager - системная служба, ключевой компоне
 - Сбор и передача метаданных метаданных от всех датчиков и актуаторов. Предоставляет целостную информацию о каждом измерительном/исполняющем устройстве на платформе EcoLight;
 - Прием и перенаправление команд. Принимает команды от сервера и направляет их соответствующим датчикам и актуаторам. Обеспечивает возможность контролировать процессы полевого уровня платформы с сервера;
 
-<div align='left'>
-    <img src="./res/diagram v02 no-color.png" alt="Image not found">
+<div align='center'>
+    <img src="./res/sm-architecture.png" alt="Image not found">
 </div>
 
 #### Взаимодействие с прокси-службами
 
 Диаграмма выше демонстрирует, что Sensor Manager не взаимодействует с клиент-серверными службами напрямую. Вместо этого он ведет двунаправленный обмен сообщениями с их прокси-службами. 
 
-<div align='left'>
-    <img src="./res/diagram data-tx.png" alt="Image not found">
+<div align='center'>
+    <img src="./res/sm-data-tx.png" alt="Image not found">
 </div>
 
 </div>
@@ -60,8 +60,6 @@ SensorManager - системная служба, ключевой компоне
 ### Методы
 <div style = "color: #555">
 
-<div style = "color: #555">
-
 - <mark style="background-color: lightblue">AddDevice(device)</mark> - добавляет устройство в реестр;
 - <mark style="background-color: lightblue">GetDevice(id)</mark> - Возвращает устройство с соответствующим id;
 - <mark style="background-color: lightblue">GetDeviceChannel(chId)</mark> - возвращает канал устройства по его id;
@@ -69,10 +67,9 @@ SensorManager - системная служба, ключевой компоне
 - <mark style="background-color: lightblue">StopPolling()</mark> - прекращает периодический опрос датчиков;
 - <mark style="background-color: lightblue">GetSensorsInfo()</mark> - собирает и возвращает метаданные с зарегистрированных сенсоров и актуаторов;
 - <mark style="background-color: lightblue">StopPolling()</mark> - прекращает периодический опрос датчиков;
-- <mark style="background-color: lightblue">SendData(dataPackage)</mark> - прекращает периодический опрос датчиков;
-- <mark style="background-color: lightblue">ExecuteCom(arg)</mark> - перенаправляет команду от внешнего агента на исполнение.
-
-</div>
+- <mark style="background-color: lightblue">ExecuteCom(arg)</mark> - перенаправляет команду от внешнего агента на исполнение;
+- <mark style="background-color: lightblue">SendData(dataPackage)</mark> - рассылает собранные данные с датчиков;
+- <mark style="background-color: lightblue">SendInfo(InfoArr)</mark> - рассылает пакет с информацией(метаданными) о всех датчиках.
 
 </div>
 
