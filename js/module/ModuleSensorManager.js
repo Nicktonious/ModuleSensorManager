@@ -34,7 +34,6 @@ class ClassSensorManager {
     get Sensors() {
         return this._Devices.filter(device => device._Type.toLowerCase() === 'sensor');
     }
-
     /**
      * @method
      * Добавляет устройство в реестр
@@ -110,7 +109,6 @@ class ClassSensorManager {
         if (this._Interval) clearInterval(this._Interval);
         this._Interval = null;
     }
-
     /**
      * @method
      * Собирает и возвращает информацию о датчиках
@@ -193,6 +191,20 @@ class ClassSensorManager {
             return true;
         }
         return false;
+    }
+    /**
+     * @method
+     * Проверяет ID сенсора/актуатора и возвращает булевое значение, указывающее можно ли этот ID использовать.
+     * @param {string} _id 
+     */
+    IsIDUnique(_id) {
+        return Boolean(this.Devices.find(device => device.ID === _id));
+    }
+    ArePinsAvailable(_pins) {
+        for (let i = 0; i < _pins.length; i++) {
+            if (this.Devices.find(device => device._Pins.includes(_pins[i]))) return false;
+        };
+        return true;
     }
 }
 
