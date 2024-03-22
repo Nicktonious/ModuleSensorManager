@@ -29,11 +29,33 @@ class ClassSensorManager {
         Object.on('new-device', (device) => {
             this.AddDevice(device);
         });
+
+        this.InitBuses();
     }
     get Devices() { return this._Devices; }
     get Sensors() {
         return this._Devices.filter(device => device._Type.toLowerCase() === 'sensor');
     }
+    /**
+     * @method
+     * Выполняет инициализацию всех шин, указанных в конфиге к текущей программе.
+     */
+    InitBuses() {
+        let config = Process.GetBusesConfig();
+
+        for (let busName of Object.keys(config)) {
+            let opts = config[busName];
+            // Приведение строкового представления пинов к получению их объектов                                   
+            for (let option of Object.keys(opts)) {
+                if (option !== 'bitrate') opts[option] = this.GetPinByStr(opts[option]);
+            }
+            let busObj;
+            if (busName.startsWith('I2C')) busObj = I2Cbus.AddBus(opts);
+            if (busName.startsWith('SPI')) busObj = SPIbus.AddBus(opts);
+            if (busName.startsWith('UART')) busObj = UARTbus.AddBus(opts);
+        }
+    }
+        
     /**
      * @method
      * Добавляет устройство в реестр
@@ -198,13 +220,80 @@ class ClassSensorManager {
      * @param {string} _id 
      */
     IsIDUnique(_id) {
-        return Boolean(this.Devices.find(device => device.ID === _id));
+        return !Boolean(this.Devices.find(device => device.ID === _id));
     }
     ArePinsAvailable(_pins) {
         for (let i = 0; i < _pins.length; i++) {
             if (this.Devices.find(device => device._Pins.includes(_pins[i]))) return false;
         };
         return true;
+    }
+    /**
+     * @method
+     * Инициализирует датчик
+     * @param {Object}  opts Объект, хранящий неопределенное множество аргументов для инициализации датчика
+     * 
+     * @returns {Object} Объект датчика
+     */
+    CreateDevice(id, opts) {
+        opts = opts || {};
+        if (typeof id !== 'string') {
+            console.log(`ERROR>> id argument must to be a string`);
+            return undefined;
+        }
+        let sensorConfig = Process.GetDeviceConfig(id);
+
+        if (!sensorConfig) {
+            console.log(`ERROR>> Failed to get ${id} config"`);
+            return undefined;
+        }
+
+        let module = Process.ImportDeviceModule(sensorConfig.name, opts.moduleNum);
+        if (!module) {
+            console.log(`ERROR>> Cannot load ${sensorConfig.module}"`);
+            return undefined;
+        }
+
+        if (!this.IsIDUnique(id)) {
+            console.log(`ERROR>> Id ${id} is already used`);
+            return undefined;
+        }
+        if (sensorConfig.bus) {
+            if (sensorConfig.bus.startsWith('I2C')) {
+                sensorConfig.bus = I2Cbus._I2Cbus[sensorConfig.bus].IDbus;
+            } else if (sensorConfig.bus.startsWith('SPI')) {
+                sensorConfig.bus = SPIbus._SPIbus[sensorConfig.bus].IDbus;
+            } else if (sensorConfig.bus.startsWith('UART')) {
+                sensorConfig.bus = SPIbus._UARTbus[sensorConfig.bus].IDbus;
+            }
+        }
+        sensorConfig.pins = sensorConfig.pins || [];
+        sensorConfig.pins = sensorConfig.pins.map(strPin => this.GetPinByStr(strPin));
+        sensorConfig.id = id;
+
+        if (!this.ArePinsAvailable(sensorConfig.pins)) {
+            console.log(`ERROR>> Pins [${opts.pins.join(', ')}] are already used`);
+            return undefined;
+        }
+
+        let device = new module(sensorConfig, sensorConfig);
+        this.AddDevice(device);
+        return device._Channels;
+    }
+    /**
+     * @method
+     * Возвращает объект пина по его имени
+     * @param {String} strPin 
+     * @returns 
+     */
+    GetPinByStr(strPin) {
+        let p;
+        try {
+            p = eval(strPin);
+        } catch (e) { }
+        if (p instanceof Pin) return p;
+
+        throw new Error(`ERROR>> Pin ${p} doesn't exist`);
     }
 }
 
