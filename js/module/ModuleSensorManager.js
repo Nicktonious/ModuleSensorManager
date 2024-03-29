@@ -5,7 +5,9 @@ class ClassSensorManager {
         } else {
             ClassSensorManager.prototype.Instance = this;
         }
+        this._EqualityPercent = 0.05;
         this._Devices = [];
+        // this._RegisteredBuses = {};
         // запуск циклического опроса
         Object.on('sensor-start-polling', (_arg) => {
             let freq = _arg[0];
@@ -37,6 +39,16 @@ class ClassSensorManager {
         return this._Devices.filter(device => device._Type.toLowerCase() === 'sensor');
     }
     /**
+     * @getter
+     */
+    set EqualityPercent(val) {
+        if (val > 0 && val < 1) {
+            this._EqualityPercent = val;
+            return true;
+        }
+        return false;
+    } 
+    /**
      * @method
      * Выполняет инициализацию всех шин, указанных в конфиге к текущей программе.
      */
@@ -53,6 +65,7 @@ class ClassSensorManager {
             if (busName.startsWith('I2C')) busObj = I2Cbus.AddBus(opts);
             if (busName.startsWith('SPI')) busObj = SPIbus.AddBus(opts);
             if (busName.startsWith('UART')) busObj = UARTbus.AddBus(opts);
+
         }
     }
         
@@ -96,15 +109,13 @@ class ClassSensorManager {
         if (typeof freq !== 'number' || freq <= 0) return false;
 
         const valIsEqual = (a, b) => {
-            // if (a && b == 0) return true;
-            const precision = 0.05;
-            return a === b || Math.abs(a - b) <= a * precision;
+            return a === b || Math.abs(a - b) <= a * this._EqualityPercent;
         };
-        let data_cache = {};
+        let data_cache = {}; // кэширование собранных данных
 
         this._Interval = setInterval(() => {
 
-            let data_package = { };
+            let data_package = { }; 
 
             this.Sensors.map(sensor => {
                 // перебор каналов
