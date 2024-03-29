@@ -43,7 +43,8 @@ SensorManager - системная служба, ключевой компоне
 <div style = "color: #555">
 
 - <mark style="background-color: lightblue">Sensors</mark> - геттер, возвращающий массив со ссылками только на датчики;
-- <mark style="background-color: lightblue">Actuators</mark> - геттер, возвращающий массив со ссылками на актуаторы.
+- <mark style="background-color: lightblue">Actuators</mark> - геттер, возвращающий массив со ссылками на актуаторы;
+- <mark style="background-color: lightblue">EqualityPercent</mark> - определяет в каких пределах (в процентах) значения, считанные с датчика будут считаться не изменившимися;
 </div>
 
 ### События
@@ -69,7 +70,11 @@ SensorManager - системная служба, ключевой компоне
 - <mark style="background-color: lightblue">StopPolling()</mark> - прекращает периодический опрос датчиков;
 - <mark style="background-color: lightblue">ExecuteCom(arg)</mark> - перенаправляет команду от внешнего агента на исполнение;
 - <mark style="background-color: lightblue">SendData(dataPackage)</mark> - рассылает собранные данные с датчиков;
-- <mark style="background-color: lightblue">SendInfo(InfoArr)</mark> - рассылает пакет с информацией(метаданными) о всех датчиках.
+- <mark style="background-color: lightblue">SendInfo(InfoArr)</mark> - рассылает пакет с информацией(метаданными) о всех датчиках;
+- <mark style="background-color: lightblue">InitBuses()</mark> - выполняет инициализацию всех шин, указанных в конфиге к текущей программе;
+- <mark style="background-color: lightblue">IsIDUnique(_id)</mark> - проверяет ID сенсора/актуатора и возвращает булевое значение, указывающее можно ли этот ID использовать;
+- <mark style="background-color: lightblue">ArePinsAvailable(_pins)</mark> - проверяет не заняты ли пины другими датчиками;
+- <mark style="background-color: lightblue">CreateDevice(id, opts)</mark> - создает датчик/актуатор.
 
 </div>
 
@@ -77,7 +82,10 @@ SensorManager - системная служба, ключевой компоне
 <div style = "color: #555">
 
 ```js
-
+// Создание объекта датчика
+let sht_channels = SensorManager.CreateDevice('02');
+let tmprt = sht_channels[0];
+let hmdt = sht_channels[1];
 ```
 
 #### Результат выполнения:
@@ -91,7 +99,6 @@ SensorManager - системная служба, ключевой компоне
 ### Зависимости
 <div style = "color: #555">
 
-- <mark style="background-color: lightblue">[ClassAppError](https://github.com/Konkery/ModuleAppError/blob/main/README.md)</mark>
 </div>
 
 </div>
