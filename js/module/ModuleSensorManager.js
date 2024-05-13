@@ -105,7 +105,7 @@ class ClassSensorManager {
      * @param {Number} _freq - частота опроса 
      */
     StartPolling(_freq) {
-        const freq = _freq || 4;
+        const freq = _freq || 5;
         if (typeof freq !== 'number' || freq <= 0) return false;
 
         const valIsEqual = (a, b) => {
@@ -233,6 +233,12 @@ class ClassSensorManager {
     IsIDUnique(_id) {
         return !Boolean(this.Devices.find(device => device.ID === _id));
     }
+    /**
+     * @method
+     * Проверяет не заняты ли переданные пины
+     * @param {[Pin]} _pins - массив пинов
+     * @returns 
+     */
     ArePinsAvailable(_pins) {
         for (let i = 0; i < _pins.length; i++) {
             if (this.Devices.find(device => device._Pins.includes(_pins[i]))) return false;
@@ -247,11 +253,15 @@ class ClassSensorManager {
      * @returns {Object} Объект датчика
      */
     CreateDevice(id, opts) {
-        opts = opts || {};
+        opts = opts || { moduleNum: 0 };
         if (typeof id !== 'string') {
             console.log(`ERROR>> id argument must to be a string`);
             return undefined;
         }
+
+        let dev = this.Devices.find(d => d.ID === id);
+        if (dev) return dev._Channels;
+
         let sensorConfig = Process.GetDeviceConfig(id);
 
         if (!sensorConfig) {
@@ -259,25 +269,21 @@ class ClassSensorManager {
             return undefined;
         }
 
-        let module = Process.ImportDeviceModule(sensorConfig.name, opts.moduleNum);
+        // let module = Process.ImportDeviceModule(sensorConfig.name, opts.moduleNum);
+        let module = require(sensorConfig.modules[opts.moduleNum]);
+        if (opts.key) module = module[key];
         if (!module) {
             console.log(`ERROR>> Cannot load ${sensorConfig.module}"`);
             return undefined;
         }
 
-        if (!this.IsIDUnique(id)) {
-            console.log(`ERROR>> Id ${id} is already used`);
-            return undefined;
-        }
-        if (sensorConfig.bus) {
-            if (sensorConfig.bus.startsWith('I2C')) {
-                sensorConfig.bus = I2Cbus._I2Cbus[sensorConfig.bus].IDbus;
-            } else if (sensorConfig.bus.startsWith('SPI')) {
-                sensorConfig.bus = SPIbus._SPIbus[sensorConfig.bus].IDbus;
-            } else if (sensorConfig.bus.startsWith('UART')) {
-                sensorConfig.bus = SPIbus._UARTbus[sensorConfig.bus].IDbus;
-            }
-        }
+        // if (!this.IsIDUnique(id)) {
+        //     console.log(`ERROR>> Id ${id} is already used`);
+        //     return undefined;
+        // }
+
+        if (sensorConfig.bus) sensorConfig.bus = this.GetBusByID(sensorConfig.bus);
+        
         sensorConfig.pins = sensorConfig.pins || [];
         sensorConfig.pins = sensorConfig.pins.map(strPin => this.GetPinByStr(strPin));
         sensorConfig.id = id;
@@ -305,6 +311,23 @@ class ClassSensorManager {
         if (p instanceof Pin) return p;
 
         throw new Error(`ERROR>> Pin ${p} doesn't exist`);
+    }
+    /**
+     * @method
+     * Возвращает объект шины по ее ID
+     * @param {string} _bus - ID шины
+     * @returns 
+     */
+    GetBusByID(_bus) {
+        let bus;
+        if (_bus.startsWith('I2C')) {
+            bus = I2Cbus._I2Cbus[_bus].IDbus;
+        } else if (bus.startsWith('SPI')) {
+            _bus = SPIbus._SPIbus[_bus].IDbus;
+        } else if (bus.startsWith('UART')) {
+            _bus = SPIbus._UARTbus[_bus].IDbus;
+        }
+        return bus;
     }
 }
 
